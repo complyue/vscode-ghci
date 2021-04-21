@@ -305,7 +305,8 @@ export async function sendGHCiSourceToTerminal(document?: vscode.TextDocument,
     if (null === term) {
         return; // cancelled
     }
-    const prologue = sourceText.startsWith('\n') ? ':{\ndo' : ':{\ndo\n';
+    const prologue = sourceText.trimLeft().startsWith('import ') ?
+        ':{\n' : sourceText.startsWith('\n') ? ':{\ndo' : ':{\ndo\n';
     const epilogue = sourceText.endsWith('\n') ? ':}' : '\n:}';
     term.sendText(prologue + sourceText + epilogue, true);
 }
