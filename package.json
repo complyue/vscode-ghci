@@ -1,0 +1,52 @@
+{
+    "preview": true,
+    "publisher": "ComplYue",
+    "license": "MIT",
+    "repository": {
+        "url": "https://github.com/complyue/vscode-ghci"
+    },
+    "name": "vscode-ghci",
+    "displayName": "GHCi Sessions to run Interactive CodeLens",
+    "description": "Support CodeLens to run in GHCi as integrated terminal sessions",
+    "extensionDependencies": [],
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.39.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "activationEvents": [
+        "onLanguage:haskell",
+        "onCommand:ghci.NewGHCiTermSession",
+        "onCommand:ghci.SendToGHCiTermSession"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "ghci.NewGHCiTermSession",
+                "title": "GHCi: New Terminal"
+            },
+            {
+                "command": "ghci.SendToGHCiTermSession",
+                "title": "GHCi: Execute Haskell Source"
+            }
+        ],
+        "configuration": []
+    },
+    "scripts": {
+        "vscode:prepublish": "yarn run compile",
+        "compile": "tsc -p ./",
+        "lint": "eslint . --ext .ts,.tsx",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/node": "^12.12.0",
+        "@types/vscode": "^1.39.0",
+        "@typescript-eslint/eslint-plugin": "^3.7.0",
+        "@typescript-eslint/parser": "^3.7.0",
+        "eslint": "^7.5.0",
+        "typescript": "^3.9.5"
+    }
+}
