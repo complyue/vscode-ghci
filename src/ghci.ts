@@ -281,34 +281,55 @@ export async function sendGHCiSourceToTerminal(document?: vscode.TextDocument,
                 : sel.end.line;
             sourceText = selText;
         }
+    } else {
+        if (beforeLineIdx < 0) {
+            beforeLineIdx = document.lineCount;
+        }
+        sourceText = '';
+        let inBlock = false;
+        const ensureInBlock = () => {
+            if (!inBlock) {
+                sourceText += ':{\ndo\n';
+                inBlock = true;
+            }
+        };
+        const ensureOutOfBlock = () => {
+            if (inBlock) {
+                sourceText += ':}\n';
+                inBlock = false;
+            }
+        };
+        for (let lineIdx = sinceLineIdx; lineIdx < beforeLineIdx; lineIdx++) {
+            const line = document.lineAt(lineIdx);
+            const lineText = line.text.trimLeft();
+            if (line.isEmptyOrWhitespace) {
+                sourceText += '\n';
+            } else if (lineText.startsWith('-- %:')) {
+                ensureOutOfBlock();
+                sourceText += lineText.substr('-- %'.length);
+            } else if (line.firstNonWhitespaceCharacterIndex <= 0) {
+                ensureOutOfBlock();
+                sourceText += lineText + '\n';
+            } else {
+                ensureInBlock();
+                sourceText += line.text + '\n';
+            }
+        }
+        if (inBlock) {
+            sourceText += ':}\n';
+        }
     }
 
-    if (beforeLineIdx < 0) {
-        beforeLineIdx = document.lineCount;
-    }
-
-    const lineCnt = beforeLineIdx >= document.lineCount
-        ? beforeLineIdx - sinceLineIdx - 1
-        : beforeLineIdx - sinceLineIdx;
-
-    if (lineCnt < 1) {
+    if (null === sourceText || sourceText.length < 1) {
         console.warn('No GHCi source to send.');
         return;
-    }
-
-    if (null === sourceText) {
-        sourceText = document.getText(new vscode.Range(
-            sinceLineIdx, 0, beforeLineIdx, 0));
     }
 
     const term = await prepareGHCiTerminal();
     if (null === term) {
         return; // cancelled
     }
-    const prologue = sourceText.trimLeft().startsWith('import ') ?
-        ':{\n' : sourceText.startsWith('\n') ? ':{\ndo' : ':{\ndo\n';
-    const epilogue = sourceText.endsWith('\n') ? ':}' : '\n:}';
-    term.sendText(prologue + sourceText + epilogue, true);
+    term.sendText(sourceText, true);
 }
 
 export async function prepareGHCiTerminal(): Promise<null | vscode.Terminal> {
