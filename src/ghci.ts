@@ -93,10 +93,10 @@ export async function newGHCiTerminal(cmdl?: string): Promise<boolean> {
 
 class AsEnteredCmd implements vscode.QuickPickItem {
 
-    alwaysShow = true;
+    alwaysShow = true
 
-    label = '';
-    description = '';
+    label = ''
+    description = ''
 
     constructor(description: string) {
         this.description = description;
@@ -106,10 +106,10 @@ class AsEnteredCmd implements vscode.QuickPickItem {
 
 class OptionCmd implements vscode.QuickPickItem {
 
-    alwaysShow = true;
+    alwaysShow = true
 
-    label: string;
-    description?: string;
+    label: string
+    description?: string
 
     constructor(lable: string, description?: string) {
         this.label = lable;
@@ -121,8 +121,8 @@ class OptionCmd implements vscode.QuickPickItem {
 
 export class GHCiCodeLensProvider implements vscode.CodeLensProvider {
 
-    private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
-    public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
+    private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>()
+    public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event
 
     constructor() {
         vscode.workspace.onDidChangeConfiguration((_) => {
