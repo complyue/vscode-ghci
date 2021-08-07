@@ -189,7 +189,7 @@ export class GHCiCodeLensProvider implements vscode.CodeLensProvider {
                     "title": "Run Block",
                     "command": "ghci.SendToGHCiTermSession",
                     "arguments": [
-                        document, lineIdx + 1, beforeBlockIdx
+                        document, lineIdx, beforeBlockIdx
                     ]
                 }));
                 if (lineIdx > 0) {
@@ -223,7 +223,7 @@ export class GHCiCodeLensProvider implements vscode.CodeLensProvider {
                 cellCnt++;
             } else if (effLine.startsWith("-- %}")) {
                 // a block-ending cell
-                beforeBlockIdx = beforeLineIdx;
+                beforeBlockIdx = lineIdx;
                 codeLenses.push(new vscode.CodeLens(
                     new vscode.Range(lineIdx, 0, lineIdx + 1, 0), {
                     "title": "Run Rest",
@@ -287,11 +287,19 @@ export async function sendGHCiSourceToTerminal(document?: vscode.TextDocument,
         }
         sourceText = '';
         let inBlock = false;
-        const ensureInBlock = () => {
+        const ensureInDoBlock = () => {
             if (!inBlock) {
                 sourceText += ':{\ndo\n';
                 inBlock = true;
             }
+        };
+        const ensureInSeparateBlock = () => {
+            if (inBlock) {
+                sourceText += ':}\n';
+            }
+            sourceText += ':{\n';
+            inBlock = true;
+
         };
         const ensureOutOfBlock = () => {
             if (inBlock) {
@@ -304,14 +312,24 @@ export async function sendGHCiSourceToTerminal(document?: vscode.TextDocument,
             const lineText = line.text.trimLeft();
             if (line.isEmptyOrWhitespace) {
                 sourceText += '\n';
+            } else if (lineText.startsWith('-- %{')) {
+                ensureInSeparateBlock();
+                for (lineIdx++; lineIdx < beforeLineIdx; lineIdx++) {
+                    const line = document.lineAt(lineIdx);
+                    sourceText += line.text + '\n';
+                }
             } else if (lineText.startsWith('-- %:')) {
                 ensureOutOfBlock();
                 sourceText += lineText.substr('-- %'.length) + '\n';
+            } else if (startsWithAnyOf(
+                "class", "type", "data", 'instance',
+            )(line.text)) {
+                ensureInSeparateBlock();
+                sourceText += line.text + '\n';
             } else if (line.firstNonWhitespaceCharacterIndex <= 0) {
-                ensureOutOfBlock();
                 sourceText += lineText + '\n';
             } else {
-                ensureInBlock();
+                ensureInDoBlock();
                 sourceText += line.text + '\n';
             }
         }
@@ -330,6 +348,15 @@ export async function sendGHCiSourceToTerminal(document?: vscode.TextDocument,
         return; // cancelled
     }
     term.sendText(sourceText, true);
+}
+
+function startsWithAnyOf(...prefixes: string[]) {
+    return function (s: string) {
+        for (const prefix of prefixes) {
+            if (s.startsWith(prefix)) return true;
+        }
+        return false;
+    };
 }
 
 export async function prepareGHCiTerminal(): Promise<null | vscode.Terminal> {
