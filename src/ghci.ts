@@ -306,7 +306,7 @@ export async function sendGHCiSourceToTerminal(document?: vscode.TextDocument,
                 sourceText += '\n';
             } else if (lineText.startsWith('-- %:')) {
                 ensureOutOfBlock();
-                sourceText += lineText.substr('-- %'.length);
+                sourceText += lineText.substr('-- %'.length) + '\n';
             } else if (line.firstNonWhitespaceCharacterIndex <= 0) {
                 ensureOutOfBlock();
                 sourceText += lineText + '\n';
